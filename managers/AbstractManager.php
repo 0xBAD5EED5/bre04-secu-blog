@@ -1,10 +1,4 @@
 <?php
-/**
- * @author : Gaellan
- * @link : https://github.com/Gaellan
- */
-
-
 abstract class AbstractManager
 {
     protected PDO $db;
