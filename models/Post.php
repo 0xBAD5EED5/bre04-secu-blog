@@ -1,6 +1,6 @@
 <?php
 
-class Category
+class Post
 {
     private ?int $id = null;
 
@@ -8,8 +8,8 @@ class Category
         private string $title,
         private string $excerpt,
         private string $content,
-        private string $author,
-        private string $created_at
+        private int $author,
+        private DateTime $created_at
     ) {}
 
     // ID
@@ -50,5 +50,25 @@ class Category
     public function setContent(string $content): void
     {
         $this->content = $content;
+    }
+
+    // Author (user_id)
+    public function getAuthor(): int
+    {
+        return $this->author;
+    }
+    public function setAuthor(int $author): void
+    {
+        $this->author = $author;
+    }
+
+    // Created_at
+    public function getCreated_at(): DateTime
+    {
+        return $this->created_at;
+    }
+    public function setCreated_at(DateTime $created_at): void
+    {
+        $this->created_at = $created_at;
     }
 }

@@ -9,7 +9,7 @@ class User
         private string $email,
         private string $password,
         private string $role,
-        private date $created_at
+        private DateTime $created_at
     ) {}
 
     // ID
@@ -32,6 +32,16 @@ class User
         $this->username = $username;
     }
 
+    // Email
+    public function getEmail(): string
+    {
+        return $this->email;
+    }
+    public function setEmail(string $email): void
+    {
+        $this->email = $email;
+    }
+
     // Password
     public function getPassword(): string
     {
@@ -51,13 +61,13 @@ class User
     {
         $this->role = $role;
     }
-    
+
     // Created_at
-    public function getCreated_at(): date
+    public function getCreated_at(): DateTime
     {
         return $this->created_at;
     }
-    public function setCreated_at(string $created_at): void
+    public function setCreated_at(DateTime $created_at): void
     {
         $this->created_at = $created_at;
     }
