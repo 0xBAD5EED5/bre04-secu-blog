@@ -33,16 +33,13 @@ class CategoryManager extends AbstractManager
     }
 
     // Récupérer les catégories d'un post
-    public function findByPost(int $postId): void
+    public function findByPost(int $postId): array
     {
         $sql = "SELECT c.* FROM categories c INNER JOIN posts_categories pc ON c.id = pc.category_id WHERE pc.post_id = :post_id";
         $params = [':post_id' => $postId];
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($rows as $row) {
-            $category = new Category($row['title'], $row['description']);
-            $category->setId($row['id']);
-        }
+        return $rows;
     }
 }
