@@ -6,8 +6,8 @@ class Comment
 
     public function __construct(
         private string $content,
-        private User $user_id,
-        private Post $post_id
+        private User $user,
+        private Post $post
     ) {}
 
     // ID
@@ -27,26 +27,26 @@ class Comment
     }
     public function setContent(string $content): void
     {
-        $this->content = content;
+        $this->content = $content;
     }
 
-    // User_id
-    public function getUser_id(): User
+    // User
+    public function getUser(): User
     {
-        return $this->user_id;
+        return $this->user;
     }
-    public function setUser_id(User $user_id): void
+    public function setUser(User $user): void
     {
-        $this->user_id = $user_id;
+        $this->user = $user;
     }
 
-    // Post_id
-    public function getPost_id(): Post
+    // Post
+    public function getPost(): Post
     {
-        return $this->post_id;
+        return $this->post;
     }
-    public function setPost_id(Post $post_id): void
+    public function setPost(Post $post): void
     {
-        $this->post_id = $post_id;
+        $this->post = $post;
     }
 }
