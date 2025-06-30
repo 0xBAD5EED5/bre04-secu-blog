@@ -32,37 +32,17 @@ class CategoryManager extends AbstractManager
         return null;
     }
 
-    // Ajouter une catégorie
-    public function create(Category $category): bool
+    // Récupérer les catégories d'un post
+    public function findByPost(int $postId): void
     {
-        $sql = "INSERT INTO categories (title, description) VALUES (:title, :description)";
-        $params = [
-            ':title' => $category->getTitle(),
-            ':description' => $category->getDescription()
-        ];
+        $sql = "SELECT c.* FROM categories c INNER JOIN posts_categories pc ON c.id = pc.category_id WHERE pc.post_id = :post_id";
+        $params = [':post_id' => $postId];
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute($params);
-    }
-
-    // Modifier une catégorie
-    public function update(Category $category): bool
-    {
-        $sql = "UPDATE categories SET title = :title, description = :description WHERE id = :id";
-        $params = [
-            ':title' => $category->getTitle(),
-            ':description' => $category->getDescription(),
-            ':id' => $category->getId()
-        ];
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute($params);
-    }
-
-    // Supprimer une catégorie
-    public function delete(int $id): bool
-    {
-        $sql = "DELETE FROM categories WHERE id = :id";
-        $params = [':id' => $id];
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute($params);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as $row) {
+            $category = new Category($row['title'], $row['description']);
+            $category->setId($row['id']);
+        }
     }
 }

@@ -33,7 +33,7 @@ class CommentManager extends AbstractManager
     }
 
     // Insérer un commentaire
-    public function create(Comment $comment): bool
+    public function create(Comment $comment): void
     {
         $sql = "INSERT INTO comments (content, user_id, post_id) VALUES (:content, :user_id, :post_id)";
         $params = [
@@ -42,6 +42,8 @@ class CommentManager extends AbstractManager
             ':post_id' => $comment->getPost()->getId()
         ];
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute($params);
+        $stmt->execute($params);
+        // Hydrater l'id du commentaire après insertion
+        $comment->setId($this->db->lastInsertId());
     }
 }
