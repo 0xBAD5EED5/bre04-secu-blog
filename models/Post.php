@@ -8,7 +8,7 @@ class Post
         private string $title,
         private string $excerpt,
         private string $content,
-        private int $author,
+        private User $author,
         private DateTime $created_at
     ) {}
 
@@ -53,11 +53,11 @@ class Post
     }
 
     // Author (user_id)
-    public function getAuthor(): int
+    public function getAuthor(): User
     {
         return $this->author;
     }
-    public function setAuthor(int $author): void
+    public function setAuthor(User $author): void
     {
         $this->author = $author;
     }
