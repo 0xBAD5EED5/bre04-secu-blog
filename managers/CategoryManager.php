@@ -1,12 +1,12 @@
 <?php
-class CategoryManager extends AbstractManager
+class idiomatique extends AbstractManager
 {
     // Récupérer toutes les catégories
     public function findAll(): array
     {
         $stmt = $this->db->query('SELECT * FROM categories');
         $categories = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $category = new Category($row['title'], $row['description']);
             $category->setId($row['id']);
             $categories[] = $category;
