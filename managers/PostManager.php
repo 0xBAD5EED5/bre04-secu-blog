@@ -4,10 +4,12 @@ class PostManager extends AbstractManager
     // Retourne les 4 derniers posts
     public function findLatest(): array
     {
-        $stmt = $this->db->query('SELECT * FROM posts ORDER BY created_at DESC LIMIT 4');
+        $sql = "SELECT * FROM posts ORDER BY created_at DESC LIMIT 4";
+        $stmt = $this->db->query($sql);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $posts = [];
         $userManager = new UserManager();
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        foreach ($rows as $row) {
             $author = $userManager->findOne($row['author']);
             $post = new Post(
                 $row['title'],
@@ -25,8 +27,10 @@ class PostManager extends AbstractManager
     // Retourne un post par son id
     public function findOne(int $id): ?Post
     {
-        $stmt = $this->db->prepare('SELECT * FROM posts WHERE id = :id');
-        $stmt->execute(['id' => $id]);
+        $sql = "SELECT * FROM posts WHERE id = :id";
+        $params = [':id' => $id];
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($row) {
             $userManager = new UserManager();
@@ -47,11 +51,14 @@ class PostManager extends AbstractManager
     // Retourne les posts d'une catégorie
     public function findByCategory(int $categoryId): array
     {
-        $stmt = $this->db->prepare('SELECT p.* FROM posts p INNER JOIN posts_categories pc ON p.id = pc.post_id WHERE pc.category_id = :categoryId');
-        $stmt->execute(['categoryId' => $categoryId]);
+        $sql = "SELECT p.* FROM posts p INNER JOIN posts_categories pc ON p.id = pc.post_id WHERE pc.category_id = :categoryId";
+        $params = [':categoryId' => $categoryId];
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $posts = [];
         $userManager = new UserManager();
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        foreach ($rows as $row) {
             $author = $userManager->findOne($row['author']);
             $post = new Post(
                 $row['title'],
