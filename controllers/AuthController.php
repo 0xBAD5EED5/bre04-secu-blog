@@ -62,12 +62,10 @@ class AuthController extends AbstractController
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        // Debug temporaire : afficher le POST
-        echo '<pre style="color:red">POST : ' . print_r($_POST, true) . '</pre>';
-        flush();
+        //
         $csrfManager = new CSRFTokenManager();
         if (!isset($_POST['csrf-token']) || !$csrfManager->validateCSRFToken($_POST['csrf-token'])) {
-            echo '<p style="color:red">CSRF token invalide</p>';
+            $this->redirect("index.php?route=register");
             exit;
         }
 
@@ -77,24 +75,24 @@ class AuthController extends AbstractController
         $confirmPassword = isset($_POST['confirm-password']) ? $_POST['confirm-password'] : '';
 
         if (empty($username) || empty($email) || empty($password) || empty($confirmPassword)) {
-            echo '<p style="color:red">Champs manquants</p>';
+            $this->redirect("index.php?route=register");
             exit;
         }
 
         $regex = "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/";
         if (!preg_match($regex, $password)) {
-            echo '<p style="color:red">Mot de passe non conforme</p>';
+            $this->redirect("index.php?route=register");
             exit;
         }
 
         if ($password !== $confirmPassword) {
-            echo '<p style="color:red">Les mots de passe ne correspondent pas</p>';
+            $this->redirect("index.php?route=register");
             exit;
         }
 
         $userManager = new UserManager();
         if ($userManager->findByEmail($email)) {
-            echo '<p style="color:red">Email déjà utilisé</p>';
+            $this->redirect("index.php?route=register");
             exit;
         }
 
@@ -102,13 +100,10 @@ class AuthController extends AbstractController
         $user = new User($username, $email, $hashedPassword);
         $userManager->create($user);
 
-        echo '<p style="color:green">Utilisateur créé avec succès !</p>';
-        echo '<pre>' . print_r($user, true) . '</pre>';
-        flush();
         $_SESSION['user_id'] = $user->getId();
         $_SESSION['username'] = $user->getUsername();
         $_SESSION['role'] = $user->getRole();
-        // $this->redirect("index.php");
+        $this->redirect("index.php");
         exit;
     }
 
