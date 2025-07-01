@@ -1,0 +1,54 @@
+<main id="post" class="py-5 px-3">
+    <?php if (!empty($data['post'])): ?>
+        <h1 class="mb-3"><?= htmlspecialchars($data['post']->getTitle()) ?></h1>
+        <div class="mb-2 text-muted">
+            Par <?= htmlspecialchars($data['post']->getAuthor()->getUsername()) ?>, le <?= $data['post']->getCreatedAt()->format('d/m/Y') ?>
+        </div>
+        <div class="mb-2">
+            <?php foreach ($data['post']->getCategories() as $cat): ?>
+                <?php
+                    if (is_object($cat)) {
+                        echo htmlspecialchars($cat->getTitle());
+                    } elseif (is_array($cat) && isset($cat['title'])) {
+                        echo htmlspecialchars($cat['title']);
+                    } elseif (is_string($cat)) {
+                        echo htmlspecialchars($cat);
+                    }
+                ?>
+            <?php endforeach; ?>
+        </div>
+        <div class="mb-4">
+            <?= $data['post']->getContent() ?>
+        </div>
+
+        <h2>Commentaires</h2>
+        <ul class="list-group mb-4">
+            <?php if (!empty($data['comments'])): ?>
+                <?php foreach ($data['comments'] as $comment): ?>
+                    <li class="list-group-item">
+                        <strong><?= htmlspecialchars($comment->getUser()->getUsername()) ?></strong> :
+                        <?= htmlspecialchars($comment->getContent()) ?>
+                    </li>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <li class="list-group-item">Aucun commentaire pour ce post.</li>
+            <?php endif; ?>
+        </ul>
+
+        <?php if (isset($_SESSION['user_id'])): ?>
+            <form action="index.php?route=check-comment" method="post">
+                <input type="hidden" name="csrf-token" value="<?= isset($_SESSION['csrf_token']) ? htmlspecialchars($_SESSION['csrf_token']) : '' ?>">
+                <input type="hidden" name="post_id" value="<?= $data['post']->getId() ?>">
+                <div class="mb-3">
+                    <label for="content" class="form-label">Votre commentaire</label>
+                    <textarea name="content" id="content" class="form-control" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Envoyer</button>
+            </form>
+        <?php else: ?>
+            <div class="alert alert-info">Connectez-vous pour commenter.</div>
+        <?php endif; ?>
+    <?php else: ?>
+        <div class="alert alert-danger">Post introuvable.</div>
+    <?php endif; ?>
+</main>
