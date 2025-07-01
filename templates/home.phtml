@@ -11,7 +11,7 @@
                             <h3 class="h5 card-title"><?= htmlspecialchars($post->getTitle()) ?></h3>
                             <h4 class="h6 card-subtitle mb-2 text-body-secondary">
                                 <?php foreach ($post->getCategories() as $cat): ?>
-                                    <?= htmlspecialchars($cat->getTitle()) ?><br>
+                                    <?= is_object($cat) ? htmlspecialchars($cat->getTitle()) : htmlspecialchars($cat) ?><br>
                                 <?php endforeach; ?>
                             </h4>
                         </header>
