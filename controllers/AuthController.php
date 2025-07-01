@@ -14,92 +14,102 @@ class AuthController extends AbstractController
 
     public function checkLogin() : void
     {
-        // Vérification des champs obligatoires
-        if (!isset($_POST["email"]) || !isset($_POST["password"])) {
-            $_SESSION["error-message"] = "Missing fields";
+        session_start();
+        $csrfManager = new CSRFTokenManager();
+        if (!isset($_POST['csrf-token']) || !$csrfManager->validateCSRFToken($_POST['csrf-token'])) {
             $this->redirect("index.php?route=login");
-            return;
+            exit;
         }
 
-        // Vérification du token CSRF
-        $tokenManager = new CSRFTokenManager();
-        if (!isset($_POST["csrf-token"]) || !$tokenManager->validateCSRFToken($_POST["csrf-token"])) {
-            $_SESSION["error-message"] = "Invalid CSRF token";
+        $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+        $password = isset($_POST['password']) ? $_POST['password'] : '';
+
+        // XSS: on n'affiche jamais directement les entrées utilisateur sans htmlspecialchars dans les vues
+
+        if (empty($email) || empty($password)) {
             $this->redirect("index.php?route=login");
-            return;
+            exit;
         }
 
-        // Recherche de l'utilisateur
-        $um = new UserManager();
-        $user = $um->findByEmail($_POST["email"]);
-        if ($user === null || !password_verify($_POST["password"], $user->getPassword())) {
-            $_SESSION["error-message"] = "Invalid login information";
+        $userManager = new UserManager();
+        $user = $userManager->findByEmail($email);
+        if ($user && password_verify($password, $user->getPassword())) {
+            $_SESSION['user_id'] = $user->getId();
+            $_SESSION['username'] = $user->getUsername();
+            $_SESSION['role'] = $user->getRole();
+            $this->redirect("index.php");
+            exit;
+        } else {
             $this->redirect("index.php?route=login");
-            return;
+            exit;
         }
-
-        // Connexion réussie
-        $_SESSION["user"] = $user->getId();
-        unset($_SESSION["error-message"]);
-        $this->redirect("index.php");
     }
 
     public function register() : void
     {
-        $this->render("register", []);
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $csrfManager = new CSRFTokenManager();
+        if (!isset($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = $csrfManager->generateCSRFToken();
+        }
+        $this->render("register", ["csrf_token" => $_SESSION['csrf_token']]);
     }
 
     public function checkRegister() : void
     {
-        // Vérification des champs obligatoires
-        if (!isset($_POST["username"]) || !isset($_POST["email"]) || !isset($_POST["password"]) || !isset($_POST["confirm-password"])) {
-            $_SESSION["error-message"] = "Missing fields";
-            $this->redirect("index.php?route=register");
-            return;
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        // Debug temporaire : afficher le POST
+        echo '<pre style="color:red">POST : ' . print_r($_POST, true) . '</pre>';
+        flush();
+        $csrfManager = new CSRFTokenManager();
+        if (!isset($_POST['csrf-token']) || !$csrfManager->validateCSRFToken($_POST['csrf-token'])) {
+            echo '<p style="color:red">CSRF token invalide</p>';
+            exit;
         }
 
-        // Vérification du token CSRF
-        $tokenManager = new CSRFTokenManager();
-        if (!isset($_POST["csrf-token"]) || !$tokenManager->validateCSRFToken($_POST["csrf-token"])) {
-            $_SESSION["error-message"] = "Invalid CSRF token";
-            $this->redirect("index.php?route=register");
-            return;
+        $username = isset($_POST['username']) ? trim($_POST['username']) : '';
+        $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+        $password = isset($_POST['password']) ? $_POST['password'] : '';
+        $confirmPassword = isset($_POST['confirm-password']) ? $_POST['confirm-password'] : '';
+
+        if (empty($username) || empty($email) || empty($password) || empty($confirmPassword)) {
+            echo '<p style="color:red">Champs manquants</p>';
+            exit;
         }
 
-        // Vérification de la correspondance des mots de passe
-        if ($_POST["password"] !== $_POST["confirm-password"]) {
-            $_SESSION["error-message"] = "The passwords do not match";
-            $this->redirect("index.php?route=register");
-            return;
+        $regex = "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/";
+        if (!preg_match($regex, $password)) {
+            echo '<p style="color:red">Mot de passe non conforme</p>';
+            exit;
         }
 
-        // Vérification de la robustesse du mot de passe
-        $password_pattern = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\d\s])[A-Za-z\d^\w\s]{8,}$/';
-        if (!preg_match($password_pattern, $_POST["password"])) {
-            $_SESSION["error-message"] = "Password is not strong enough";
-            $this->redirect("index.php?route=register");
-            return;
+        if ($password !== $confirmPassword) {
+            echo '<p style="color:red">Les mots de passe ne correspondent pas</p>';
+            exit;
         }
 
-        // Vérification de l'existence de l'utilisateur
-        $um = new UserManager();
-        $user = $um->findByEmail($_POST["email"]);
-        if ($user !== null) {
-            $_SESSION["error-message"] = "User already exists";
-            $this->redirect("index.php?route=register");
-            return;
+        $userManager = new UserManager();
+        if ($userManager->findByEmail($email)) {
+            echo '<p style="color:red">Email déjà utilisé</p>';
+            exit;
         }
 
-        // Création de l'utilisateur
-        $username = htmlspecialchars($_POST["username"]);
-        $email = htmlspecialchars($_POST["email"]);
-        $password = password_hash($_POST["password"], PASSWORD_BCRYPT);
-        $user = new User($username, $email, $password);
-        $um->create($user);
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+        $user = new User($username, $email, $hashedPassword);
+        $userManager->create($user);
 
-        $_SESSION["user"] = $user->getId();
-        unset($_SESSION["error-message"]);
-        $this->redirect("index.php");
+        echo '<p style="color:green">Utilisateur créé avec succès !</p>';
+        echo '<pre>' . print_r($user, true) . '</pre>';
+        flush();
+        $_SESSION['user_id'] = $user->getId();
+        $_SESSION['username'] = $user->getUsername();
+        $_SESSION['role'] = $user->getRole();
+        // $this->redirect("index.php");
+        exit;
     }
 
     public function logout() : void
