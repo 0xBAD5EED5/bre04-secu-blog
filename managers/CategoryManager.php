@@ -1,45 +1,63 @@
 <?php
+
 class CategoryManager extends AbstractManager
 {
-    // Récupérer toutes les catégories
-    public function findAll(): array
+    // Constructeur : initialise la connexion à la base via AbstractManager
+    public function __construct()
     {
-        $sql = "SELECT * FROM categories";
-        $stmt = $this->db->query($sql);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        parent::__construct();
+    }
+
+    // Récupère toutes les catégories de la base de données
+    public function findAll() : array
+    {
+        $query = $this->db->prepare('SELECT * FROM categories');
+        $query->execute();
+        $result = $query->fetchAll(PDO::FETCH_ASSOC);
         $categories = [];
-        foreach ($rows as $row) {
-            $category = new Category($row['title'], $row['description']);
-            $category->setId($row['id']);
+
+        foreach($result as $item)
+        {
+            // Création d'un objet Category pour chaque ligne
+            $category = new Category($item["title"], $item["description"]);
+            $category->setId($item["id"]);
             $categories[] = $category;
         }
+
         return $categories;
     }
 
-    // Récupérer une catégorie par son id
-    public function findOne(int $id): ?Category
+    // Récupère une catégorie par son identifiant
+    public function findOne(int $id) : ? Category
     {
-        $sql = "SELECT * FROM categories WHERE id = :id";
-        $params = [':id' => $id];
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row) {
-            $category = new Category($row['title'], $row['description']);
-            $category->setId($row['id']);
+        $query = $this->db->prepare('SELECT * FROM categories WHERE id=:id');
+        $parameters = [
+            "id" => $id
+        ];
+        $query->execute($parameters);
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+
+        if($result)
+        {
+            $category = new Category($result["title"], $result["description"]);
+            $category->setId($result["id"]);
+
             return $category;
         }
+
         return null;
     }
 
-    // Récupérer les catégories d'un post
-    public function findByPost(int $postId): array
+    // Récupère les titres des catégories associées à un post
+    public function findByPost(int $postId) : array
     {
-        $sql = "SELECT c.* FROM categories c INNER JOIN posts_categories pc ON c.id = pc.category_id WHERE pc.post_id = :post_id";
-        $params = [':post_id' => $postId];
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return $rows;
+        $query = $this->db->prepare('SELECT categories.title FROM categories JOIN posts_categories ON posts_categories.category_id=categories.id WHERE posts_categories.post_id=:postId');
+        $parameters = [
+            "postId" => $postId
+        ];
+        $query->execute($parameters);
+        $result = $query->fetchAll(PDO::FETCH_ASSOC);
+
+        return $result;
     }
 }

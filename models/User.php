@@ -1,74 +1,116 @@
 <?php
+/**
+ * @author : Gaellan
+ * @link : https://github.com/Gaellan
+ */
 
 class User
 {
     private ?int $id = null;
+    private DateTime $createdAt;
 
     public function __construct(
         private string $username,
         private string $email,
         private string $password,
-        private string $role,
-        private DateTime $created_at
-    ) {}
+        private string $role = "USER"
+    ) {
+        $this->createdAt = new DateTime();
+    }
 
-    // ID
+    /**
+     * @return int|null
+     */
     public function getId(): ?int
     {
         return $this->id;
     }
+
+    /**
+     * @param int|null $id
+     */
     public function setId(?int $id): void
     {
         $this->id = $id;
     }
 
-    // Username
+    /**
+     * @return string
+     */
     public function getUsername(): string
     {
         return $this->username;
     }
+
+    /**
+     * @param string $username
+     */
     public function setUsername(string $username): void
     {
         $this->username = $username;
     }
 
-    // Email
+    /**
+     * @return string
+     */
     public function getEmail(): string
     {
         return $this->email;
     }
+
+    /**
+     * @param string $email
+     */
     public function setEmail(string $email): void
     {
         $this->email = $email;
     }
 
-    // Password
+    /**
+     * @return string
+     */
     public function getPassword(): string
     {
         return $this->password;
     }
+
+    /**
+     * @param string $password
+     */
     public function setPassword(string $password): void
     {
         $this->password = $password;
     }
 
-    // Role
+    /**
+     * @return string
+     */
     public function getRole(): string
     {
         return $this->role;
     }
+
+    /**
+     * @param string $role
+     */
     public function setRole(string $role): void
     {
         $this->role = $role;
     }
 
-    // Created_at
-    public function getCreated_at(): DateTime
+    /**
+     * @return DateTime
+     */
+    public function getCreatedAt(): DateTime
     {
-        return $this->created_at;
+        return $this->createdAt;
     }
-    public function setCreated_at(DateTime $created_at): void
+
+    /**
+     * @param DateTime $createdAt
+     */
+    public function setCreatedAt(DateTime $createdAt): void
     {
-        $this->created_at = $created_at;
+        $this->createdAt = $createdAt;
     }
 }

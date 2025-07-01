@@ -2,43 +2,54 @@
 
 class CommentManager extends AbstractManager
 {
-    // Récupérer les commentaires d'un post
-    public function findByPost(int $postId): array
+    // Constructeur : initialise la connexion à la base via AbstractManager
+    public function __construct()
     {
-        $sql = "SELECT * FROM comments WHERE post_id = :post_id";
-        $params = [':post_id' => $postId];
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        parent::__construct();
+    }
+
+    // Récupère les commentaires d'un post (avec utilisateur et post associés)
+    public function findByPost(int $postId) : array
+    {
+        $um = new UserManager();
+        $pm = new PostManager();
+
+        $query = $this->db->prepare('SELECT * FROM comments WHERE post_id=:postId');
+        $parameters = [
+            "postId" => $postId
+        ];
+        $query->execute($parameters);
+        $result = $query->fetchAll(PDO::FETCH_ASSOC);
         $comments = [];
-        $userManager = new UserManager();
-        $postManager = new PostManager();
-        foreach ($rows as $row) {
-            $user = $userManager->findOne($row['user_id']);
-            $post = $postManager->findOne($row['post_id']);
-            $comment = new Comment(
-                $row['content'],
-                $user,
-                $post
-            );
-            $comment->setId($row['id']);
+
+        foreach($result as $item)
+        {
+            // On hydrate chaque commentaire avec l'utilisateur et le post
+            $user = $um->findOne($item["user_id"]);
+            $post = $pm->findOne($item["post_id"]);
+
+            $comment = new Comment($item["content"], $user, $post);
+            $comment->setId($item["id"]);
+
             $comments[] = $comment;
         }
+
         return $comments;
     }
 
-    // Insérer un commentaire
-    public function create(Comment $comment): void
+    // Insère un nouveau commentaire en base
+    public function create(Comment $comment) : void
     {
-        $sql = "INSERT INTO comments (content, user_id, post_id) VALUES (:content, :user_id, :post_id)";
-        $params = [
-            ':content' => $comment->getContent(),
-            ':user_id' => $comment->getUser()->getId(),
-            ':post_id' => $comment->getPost()->getId()
+        $query = $this->db->prepare('INSERT INTO comments (id, content, user_id, post_id) VALUES (NULL, :content, :user_id, :post_id)');
+        $parameters = [
+            "content" => $comment->getContent(),
+            "user_id" => $comment->getUser()->getId(),
+            "post_id" => $comment->getPost()->getId(),
         ];
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        // Hydrater l'id du commentaire après insertion
+
+        $query->execute($parameters);
+
+        // Hydrate l'id du commentaire après insertion
         $comment->setId($this->db->lastInsertId());
     }
 }

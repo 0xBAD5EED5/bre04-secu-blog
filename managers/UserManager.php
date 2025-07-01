@@ -2,61 +2,75 @@
 
 class UserManager extends AbstractManager
 {
-    // Trouver un utilisateur par id
-    public function findOne(int $id): ?User
+    // Constructeur : initialise la connexion à la base via AbstractManager
+    public function __construct()
     {
-        $sql = "SELECT * FROM users WHERE id = :id";
-        $params = [':id' => $id];
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row) {
-            $user = new User(
-                $row['username'],
-                $row['email'],
-                $row['password'],
-                $row['role'],
-                new DateTime($row['created_at'])
-            );
-            $user->setId($row['id']);
-            return $user;
-        }
-        return null;
+        parent::__construct();
     }
+
     // Trouver un utilisateur par email
-    public function findByEmail(string $email): ?User
+    public function findByEmail(string $email) : ? User
     {
-        $sql = "SELECT * FROM users WHERE email = :email";
-        $params = [':email' => $email];
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row) {
-            $user = new User(
-                $row['username'],
-                $row['email'],
-                $row['password'],
-                $row['role'],
-                new DateTime($row['created_at'])
-            );
-            $user->setId($row['id']);
+        $query = $this->db->prepare('SELECT * FROM users WHERE email=:email');
+
+        $parameters = [
+            "email" => $email
+        ];
+
+        $query->execute($parameters);
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+
+        if($result)
+        {
+            $user = new User($result["username"], $result["email"], $result["password"], $result["role"]);
+            $user->setId($result["id"]);
+
             return $user;
         }
+
         return null;
     }
 
-    // Créer un utilisateur
-    public function create(User $user): bool
+    // Trouver un utilisateur par id
+    public function findOne(int $id) : ? User
     {
-        $sql = "INSERT INTO users (username, email, password, role, created_at) VALUES (:username, :email, :password, :role, :created_at)";
-        $params = [
-            ':username' => $user->getUsername(),
-            ':email' => $user->getEmail(),
-            ':password' => $user->getPassword(),
-            ':role' => $user->getRole(),
-            ':created_at' => $user->getCreated_at()->format('Y-m-d H:i:s')
+        $query = $this->db->prepare('SELECT * FROM users WHERE id=:id');
+
+        $parameters = [
+            "id" => $id
         ];
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute($params);
+
+        $query->execute($parameters);
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+
+        if($result)
+        {
+            $user = new User($result["username"], $result["email"], $result["password"], $result["role"]);
+            $user->setId($result["id"]);
+
+            return $user;
+        }
+
+        return null;
+    }
+
+    // Créer un utilisateur en base
+    public function create(User $user) : void
+    {
+        $currentDateTime = date('Y-m-d H:i:s');
+
+        $query = $this->db->prepare('INSERT INTO users (id, username, email, password, role, created_at) VALUES (NULL, :username, :email, :password, :role, :created_at)');
+        $parameters = [
+            "username" => $user->getUsername(),
+            "password" => $user->getPassword(),
+            "email" => $user->getEmail(),
+            "role" => $user->getRole(),
+            "created_at" => $currentDateTime,
+        ];
+
+        $query->execute($parameters);
+
+        $user->setId($this->db->lastInsertId());
+
     }
 }
