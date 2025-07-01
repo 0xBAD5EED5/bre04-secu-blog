@@ -9,9 +9,16 @@ class AuthController extends AbstractController
 {
     public function login() : void
     {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $csrfManager = new CSRFTokenManager();
+        if (!isset($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = $csrfManager->generateCSRFToken();
+        }
         $message = isset($_SESSION['register_message']) ? $_SESSION['register_message'] : null;
         unset($_SESSION['register_message']);
-        $this->render("login", ["message" => $message]);
+        $this->render("login", ["csrf_token" => $_SESSION['csrf_token'], "message" => $message]);
     }
 
     public function checkLogin() : void
