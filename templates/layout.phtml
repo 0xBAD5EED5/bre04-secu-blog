@@ -22,9 +22,15 @@
                             Categories
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="index.php?route=category&category_id=1">Development</a></li>
-                            <li><a class="dropdown-item" href="index.php?route=category&category_id=2">Design</a></li>
-                            <li><a class="dropdown-item" href="index.php?route=category&category_id=3">Accessibility</a></li>
+                            <?php if (!empty($data['categories'])): ?>
+                                <?php foreach ($data['categories'] as $cat): ?>
+                                    <li><a class="dropdown-item" href="index.php?route=category&category_id=<?= htmlspecialchars($cat->getId()) ?>">
+                                        <?= htmlspecialchars($cat->getTitle()) ?>
+                                    </a></li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li><span class="dropdown-item">Aucune catégorie</span></li>
+                            <?php endif; ?>
                         </ul>
                     </li>
                     <li class="nav-item">
