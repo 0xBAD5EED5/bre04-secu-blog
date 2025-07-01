@@ -11,7 +11,15 @@
                             <h3 class="h5 card-title"><?= htmlspecialchars($post->getTitle()) ?></h3>
                             <h4 class="h6 card-subtitle mb-2 text-body-secondary">
                                 <?php foreach ($post->getCategories() as $cat): ?>
-                                    <?= is_object($cat) ? htmlspecialchars($cat->getTitle()) : htmlspecialchars($cat) ?><br>
+                                    <?php
+                                        if (is_object($cat)) {
+                                            echo htmlspecialchars($cat->getTitle());
+                                        } elseif (is_array($cat) && isset($cat['title'])) {
+                                            echo htmlspecialchars($cat['title']);
+                                        } elseif (is_string($cat)) {
+                                            echo htmlspecialchars($cat);
+                                        }
+                                    ?><br>
                                 <?php endforeach; ?>
                             </h4>
                         </header>
